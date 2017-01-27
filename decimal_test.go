@@ -1396,6 +1396,51 @@ func TestDecimal_Sign(t *testing.T) {
 	}
 }
 
+func TestDecimal_IsPositive(t *testing.T) {
+	a := New(123, 0)
+	if !a.IsPositive() {
+		t.Errorf("%q should be positive", a)
+	}
+
+	b := New(-123, 0)
+	if b.IsPositive() {
+		t.Errorf("%q should not be positive", b)
+	}
+
+	c := Zero
+	if c.IsPositive() {
+		t.Errorf("%q should not be positive", c)
+	}
+}
+
+func TestDecimal_IsNegative(t *testing.T) {
+	a := New(123, 0)
+	if a.IsNegative() {
+		t.Errorf("%q should not be negative", a)
+	}
+
+	b := New(-123, 0)
+	if !b.IsNegative() {
+		t.Errorf("%q should be negative", b)
+	}
+
+	c := Zero
+	if c.IsNegative() {
+		t.Errorf("%q should not be negative", c)
+	}
+}
+
+func TestDecimal_IsZero(t *testing.T) {
+	if !Zero.IsZero() {
+		t.Errorf("%q should be zero", Zero)
+	}
+
+	one := New(1, 0)
+	if one.IsZero() {
+		t.Errorf("%q should not be zero", one)
+	}
+}
+
 func didPanic(f func()) bool {
 	ret := false
 	func() {
