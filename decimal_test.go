@@ -1,6 +1,7 @@
 package decimal
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"encoding/json"
 	"encoding/xml"
@@ -1681,6 +1682,118 @@ func TestGobEncode(t *testing.T) {
 		eq := d3.Equal(d4)
 		if eq != true {
 			t.Errorf("Encoding then decoding mutated Decimal")
+		}
+	}
+}
+
+func TestNullDecimal_MarshalJSON(t *testing.T) {
+	type testCase struct {
+		value    NullDecimal
+		expected []byte
+	}
+
+	testCases := []testCase{
+		{NullDecimal{New(1234, -2), true}, []byte(`"12.34"`)},
+		{NullDecimal{New(1, 0), true}, []byte(`"1"`)},
+		{NullDecimal{New(0, 0), false}, []byte(`null`)},
+	}
+
+	for _, testCase := range testCases {
+		marshalled, err := testCase.value.MarshalJSON()
+		if err != nil {
+			t.Errorf("unexpected error: %+v", err)
+			continue
+		}
+
+		if !bytes.Equal(marshalled, testCase.expected) {
+			t.Errorf("expected %q to equal %q", marshalled, testCase.expected)
+		}
+	}
+}
+
+func TestNullDecimal_UnmarshalJSON(t *testing.T) {
+	var goodJSON = [][]byte{
+		[]byte(`305.15`),
+		[]byte(`"305.15"`),
+		[]byte(`null`),
+	}
+
+	for _, j := range goodJSON {
+		var d NullDecimal
+		err := d.UnmarshalJSON(j)
+		if err != nil {
+			t.Errorf("unexpected error: %+v", err)
+			continue
+		}
+	}
+
+	var badJSON = [][]byte{
+		nil,
+		[]byte(``),
+		[]byte(`""`),
+	}
+
+	for _, j := range badJSON {
+		var d NullDecimal
+		err := d.UnmarshalJSON(j)
+		if err == nil {
+			t.Errorf("expected an error but saw none")
+		}
+	}
+}
+
+func TestNullDecimal_MarshalText(t *testing.T) {
+	type testCase struct {
+		value    NullDecimal
+		expected []byte
+	}
+
+	testCases := []testCase{
+		{NullDecimal{New(1234, -2), true}, []byte(`12.34`)},
+		{NullDecimal{New(1, 0), true}, []byte(`1`)},
+		{NullDecimal{New(0, 0), false}, []byte(`null`)},
+	}
+
+	for _, testCase := range testCases {
+		marshalled, err := testCase.value.MarshalText()
+		if err != nil {
+			t.Errorf("unexpected error: %+v", err)
+			continue
+		}
+
+		if !bytes.Equal(marshalled, testCase.expected) {
+			t.Errorf("expected %q to equal %q", marshalled, testCase.expected)
+		}
+	}
+}
+
+func TestNullDecimal_UnmarshalText(t *testing.T) {
+	var goodText = [][]byte{
+		[]byte(`305.15`),
+		[]byte(``),
+		nil,
+	}
+
+	for _, j := range goodText {
+		var d NullDecimal
+		err := d.UnmarshalText(j)
+		if err != nil {
+			t.Errorf("unexpected error: %+v", err)
+			continue
+		}
+	}
+
+	var badText = [][]byte{
+		[]byte(`"123"`),
+		[]byte(`"asdf"`),
+		[]byte(`asdf`),
+	}
+
+	for _, j := range badText {
+		var d NullDecimal
+		err := d.UnmarshalText(j)
+		if err == nil {
+			t.Errorf("expected an error but saw none")
 		}
 	}
 }

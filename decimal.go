@@ -18,6 +18,7 @@
 package decimal
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"encoding/binary"
 	"fmt"
@@ -846,6 +847,54 @@ func unquoteIfQuoted(value interface{}) (string, error) {
 type NullDecimal struct {
 	Decimal Decimal
 	Valid   bool
+}
+
+var nullBytes = []byte("null")
+
+// MarshalText implements encoding.TextMarshaler
+func (d NullDecimal) MarshalText() ([]byte, error) {
+	if !d.Valid {
+		return nullBytes, nil
+	}
+	return d.Decimal.MarshalText()
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler
+func (d *NullDecimal) UnmarshalText(text []byte) error {
+	if len(text) == 0 {
+		d.Valid = false
+		return nil
+	}
+
+	if err := d.Decimal.UnmarshalText(text); err != nil {
+		return err
+	}
+
+	d.Valid = true
+	return nil
+}
+
+// MarshalJSON implements json.Marshaler
+func (d NullDecimal) MarshalJSON() ([]byte, error) {
+	if !d.Valid {
+		return nullBytes, nil
+	}
+	return d.Decimal.MarshalJSON()
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (d *NullDecimal) UnmarshalJSON(data []byte) error {
+	if bytes.Equal(data, nullBytes) {
+		d.Valid = false
+		return nil
+	}
+
+	if err := d.Decimal.UnmarshalJSON(data); err != nil {
+		return err
+	}
+
+	d.Valid = true
+	return nil
 }
 
 // Scan implements the sql.Scanner interface for database deserialization.
