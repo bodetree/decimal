@@ -1797,3 +1797,35 @@ func TestNullDecimal_UnmarshalText(t *testing.T) {
 		}
 	}
 }
+
+func TestNullFrom(t *testing.T) {
+	d := New(10, 1)
+
+	nd := NullFrom(d)
+	if !nd.Valid {
+		t.Errorf("expected valid to be true")
+	}
+	if !nd.Decimal.Equals(d) {
+		t.Errorf("expected %q to equal %q", nd, d)
+	}
+}
+
+func TestNullFromPtr(t *testing.T) {
+	d := New(10, 1)
+
+	nd := NullFromPtr(&d)
+	if !nd.Valid {
+		t.Errorf("expected valid to be true")
+	}
+	if !nd.Decimal.Equals(d) {
+		t.Errorf("expected %q to equal %q", nd, d)
+	}
+
+	nd = NullFromPtr(nil)
+	if nd.Valid {
+		t.Errorf("expected valid to be false")
+	}
+	if !nd.Decimal.Equals(Zero) {
+		t.Errorf("expected %q to equal %q", nd.Decimal, Zero)
+	}
+}

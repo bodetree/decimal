@@ -849,6 +849,20 @@ type NullDecimal struct {
 	Valid   bool
 }
 
+// NullFrom converts d into a NullDecimal. The returned NullDecimal is always valid.
+func NullFrom(d Decimal) NullDecimal {
+	return NullDecimal{Decimal: d, Valid: true}
+}
+
+// NullFromPtr converts d into a NullDecimal. If d is nil, the returned NullDecimal
+// will not be valid.
+func NullFromPtr(d *Decimal) NullDecimal {
+	if d == nil {
+		return NullDecimal{Decimal: Zero, Valid: false}
+	}
+	return NullDecimal{Decimal: *d, Valid: true}
+}
+
 var nullBytes = []byte("null")
 
 // MarshalText implements encoding.TextMarshaler
